@@ -1,9 +1,7 @@
 <?php
-// Secured add_student.php
 session_start();
 include("db.php");
 
-// 1. Access control
 if (!isset($_SESSION['user']) || !isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
@@ -12,7 +10,6 @@ if (!isset($_SESSION['user']) || !isset($_SESSION['user_id'])) {
 $errors = [];
 $courses = [];
 
-// Load courses for the dropdown (normalized table)
 $cstmt = mysqli_prepare($conn, "SELECT id, course_name FROM courses ORDER BY course_name ASC");
 mysqli_stmt_execute($cstmt);
 $cresult = mysqli_stmt_get_result($cstmt);
@@ -22,7 +19,6 @@ while ($c = mysqli_fetch_assoc($cresult)) {
 
 if (isset($_POST['add'])) {
 
-    // 2. Input validation
     $student_id = trim($_POST['student_id'] ?? '');
     $fullname   = trim($_POST['fullname']   ?? '');
     $email      = trim($_POST['email']      ?? '');
@@ -33,7 +29,6 @@ if (isset($_POST['add'])) {
     if (!filter_var($email, FILTER_VALIDATE_EMAIL))  $errors[] = "A valid email is required.";
     if ($course_id <= 0)                             $errors[] = "Please select a course.";
 
-    // Check for duplicate student ID
     if (empty($errors)) {
         $chk = mysqli_prepare($conn, "SELECT id FROM students WHERE student_id = ?");
         mysqli_stmt_bind_param($chk, "s", $student_id);
@@ -46,7 +41,6 @@ if (isset($_POST['add'])) {
     }
 
     if (empty($errors)) {
-        // 3. Prepared statement – prevents SQL Injection
         $stmt = mysqli_prepare($conn,
             "INSERT INTO students (student_id, fullname, email, course_id) VALUES (?, ?, ?, ?)");
         mysqli_stmt_bind_param($stmt, "sssi", $student_id, $fullname, $email, $course_id);
